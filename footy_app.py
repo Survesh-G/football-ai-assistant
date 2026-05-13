@@ -1,6 +1,7 @@
 import streamlit as st
 from groq import Groq
 import requests
+from datetime import datetime
 
 # ---------------------------------
 # PAGE CONFIG
@@ -128,9 +129,25 @@ if user_input:
         "x-apisports-key": football_api_key
     }
 
+    # ---------------------------------
+    # DYNAMIC FOOTBALL SEASON
+    # ---------------------------------
+
+    today = datetime.now()
+
+    # Football seasons usually start around July/August
+    if today.month >= 7:
+        current_season = today.year
+    else:
+        current_season = today.year - 1
+
+    # ---------------------------------
+    # API URL
+    # ---------------------------------
+
     url = (
         f"https://v3.football.api-sports.io/players"
-        f"?search={user_input}&season=2024"
+        f"?search={user_input}&season={current_season}"
     )
 
     try:
@@ -174,23 +191,29 @@ if user_input:
 
     with st.spinner("Analyzing football data..."):
 
-        response = client.chat.completions.create(
-            model="llama-3.1-8b-instant",
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ],
-            temperature=0.3
-        )
+        try:
 
-        assistant_reply = (
-            response
-            .choices[0]
-            .message
-            .content
-        )
+            response = client.chat.completions.create(
+                model="llama-3.1-8b-instant",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                temperature=0.3
+            )
+
+            assistant_reply = (
+                response
+                .choices[0]
+                .message
+                .content
+            )
+
+        except Exception as e:
+
+            assistant_reply = f"Error: {str(e)}"
 
     # ---------------------------------
     # DISPLAY RESPONSE
