@@ -132,6 +132,15 @@ st.markdown("""
 
 })();
 </script>
+            <style>
+span.material-symbols-rounded {
+    display: none !important;
+}
+
+i.material-icons {
+    display: none !important;
+}
+</style>
 <style>
 /* Belt-and-suspenders: even if the font somehow loads, zero out all ligature text */
 button[kind="header"] {
