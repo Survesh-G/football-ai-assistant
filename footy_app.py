@@ -14,11 +14,59 @@ st.set_page_config(
 )
 
 # ---------------------------------
+# CUSTOM BACKGROUND
+# ---------------------------------
+
+st.markdown(
+    """
+    <style>
+
+    .stApp {
+        background-image: linear-gradient(
+            rgba(0, 0, 0, 0.82),
+            rgba(0, 0, 0, 0.88)
+        ),
+        url("https://images.unsplash.com/photo-1546519638-68e109498ffc?q=80&w=2070&auto=format&fit=crop");
+
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+    }
+
+    h1, h2, h3, h4, h5, h6, p, div {
+        color: white;
+    }
+
+    section[data-testid="stSidebar"] {
+        background-color: rgba(15, 15, 15, 0.92);
+    }
+
+    .stChatMessage {
+        background-color: rgba(25, 25, 25, 0.75);
+        border-radius: 15px;
+        padding: 12px;
+        margin-bottom: 10px;
+    }
+
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# ---------------------------------
 # LOAD API KEYS
 # ---------------------------------
 
 groq_api_key = st.secrets["GROQ_API_KEY"]
 football_api_key = st.secrets["FOOTBALL_API_KEY"]
+
+# ---------------------------------
+# API HEADERS
+# ---------------------------------
+
+headers = {
+    "x-apisports-key": football_api_key
+}
 
 # ---------------------------------
 # INITIALIZE GROQ CLIENT
@@ -48,13 +96,67 @@ with st.sidebar:
 
     st.divider()
 
-    st.subheader("Example Questions")
+    # ---------------------------------
+    # DYNAMIC FOOTBALL SEASON
+    # ---------------------------------
+
+    today = datetime.now()
+
+    if today.month >= 7:
+        current_season = today.year
+    else:
+        current_season = today.year - 1
+
+    # ---------------------------------
+    # LIVE EPL TABLE
+    # ---------------------------------
+
+    st.subheader("📊 Live EPL Table")
+
+    try:
+
+        standings_url = (
+            f"https://v3.football.api-sports.io/standings"
+            f"?league=39&season={current_season}"
+        )
+
+        standings_response = requests.get(
+            standings_url,
+            headers=headers,
+            timeout=10
+        )
+
+        standings_data = standings_response.json()
+
+        table = (
+            standings_data["response"][0]
+            ["league"]["standings"][0]
+        )
+
+        for team in table[:10]:
+
+            position = team["rank"]
+            name = team["team"]["name"]
+            points = team["points"]
+
+            st.write(
+                f"{position}. {name} — {points} pts"
+            )
+
+    except Exception:
+
+        st.write("Unable to load EPL standings.")
+
+    st.divider()
+
+    st.subheader("🔥 Example Questions")
 
     st.write("- Cristiano Ronaldo stats")
     st.write("- Messi vs Ronaldo")
     st.write("- Wayne Rooney career")
     st.write("- Guardiola tactics")
     st.write("- Last El Clasico")
+    st.write("- Arsenal current squad")
 
 # ---------------------------------
 # CHAT MEMORY
@@ -78,13 +180,13 @@ if "messages" not in st.session_state:
             - comparisons
             - football insights
 
-            Keep responses engaging and natural.
+            Keep responses engaging, concise, and natural.
             """
         }
     ]
 
 # ---------------------------------
-# DISPLAY OLD MESSAGES
+# DISPLAY CHAT HISTORY
 # ---------------------------------
 
 for message in st.session_state.messages:
@@ -100,11 +202,11 @@ for message in st.session_state.messages:
 # ---------------------------------
 
 user_input = st.chat_input(
-    "Ask about football players, clubs, matches, or tactics..."
+    "Ask about football players, clubs, tactics, or matches..."
 )
 
 # ---------------------------------
-# PROCESS USER INPUT
+# PROCESS INPUT
 # ---------------------------------
 
 if user_input:
@@ -112,23 +214,10 @@ if user_input:
     # Display user message
     st.chat_message("user").write(user_input)
 
-    # Save user message
-    st.session_state.messages.append(
-        {
-            "role": "user",
-            "content": user_input
-        }
-    )
-
     # ---------------------------------
-    # FETCH LIVE FOOTBALL DATA
+    # CURRENT FOOTBALL SEASON
     # ---------------------------------
 
-    headers = {
-        "x-apisports-key": football_api_key
-    }
-
-    # Dynamic football season logic
     today = datetime.now()
 
     if today.month >= 7:
@@ -136,7 +225,10 @@ if user_input:
     else:
         current_season = today.year - 1
 
-    # API URL
+    # ---------------------------------
+    # FETCH PLAYER DATA
+    # ---------------------------------
+
     url = (
         f"https://v3.football.api-sports.io/players"
         f"?search={user_input}&season={current_season}"
@@ -161,7 +253,7 @@ if user_input:
         }
 
     # ---------------------------------
-    # SAFELY CHECK API DATA
+    # VALIDATE API RESPONSE
     # ---------------------------------
 
     api_has_data = False
@@ -192,13 +284,15 @@ if user_input:
         Live Football API Data:
         {football_data}
 
-        Use this live football data to answer naturally.
+        Use this live football data naturally.
 
         Include:
         - overview
         - important stats
         - tactical analysis
         - interesting insights
+
+        Keep the tone engaging.
         """
 
     else:
@@ -209,7 +303,7 @@ if user_input:
 
         No useful live football API data was found.
 
-        Use your football knowledge to answer naturally.
+        Use your football knowledge naturally.
 
         Do NOT mention:
         - API limitations
@@ -227,21 +321,27 @@ if user_input:
         """
 
     # ---------------------------------
+    # SAVE ENHANCED PROMPT TO MEMORY
+    # ---------------------------------
+
+    st.session_state.messages.append(
+        {
+            "role": "user",
+            "content": prompt
+        }
+    )
+
+    # ---------------------------------
     # GENERATE AI RESPONSE
     # ---------------------------------
 
-    with st.spinner("Analyzing football data..."):
+    with st.spinner("⚽ Analyzing football data..."):
 
         try:
 
             response = client.chat.completions.create(
                 model="llama-3.1-8b-instant",
-                messages=[
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
+                messages=st.session_state.messages,
                 temperature=0.3
             )
 
@@ -259,14 +359,17 @@ if user_input:
             )
 
     # ---------------------------------
-    # DISPLAY RESPONSE
+    # DISPLAY AI RESPONSE
     # ---------------------------------
 
     st.chat_message("assistant").write(
         assistant_reply
     )
 
-    # Save assistant response
+    # ---------------------------------
+    # SAVE RESPONSE TO MEMORY
+    # ---------------------------------
+
     st.session_state.messages.append(
         {
             "role": "assistant",
