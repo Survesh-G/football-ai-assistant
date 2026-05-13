@@ -67,36 +67,6 @@ HEADERS   = {
 # ══════════════════════════════════════════════════════════════════════════════
 st.markdown("""
 <script>
-(function() {
-  function removeMaterialIconsLinks() {
-    document.querySelectorAll('link[href*="Material+Icons"], link[href*="material+icons"], link[href*="MaterialIcons"], link[href*="material-icons"]').forEach(function(el) {
-      el.parentNode && el.parentNode.removeChild(el);
-    });
-  }
-  // Run immediately
-  removeMaterialIconsLinks();
-  // Watch for Streamlit injecting it later
-  var observer = new MutationObserver(function(mutations) {
-    mutations.forEach(function(m) {
-      m.addedNodes.forEach(function(node) {
-        if (node.nodeType === 1) {
-          if (node.tagName === 'LINK' &&
-              node.href && node.href.toLowerCase().indexOf('material') !== -1) {
-            node.parentNode && node.parentNode.removeChild(node);
-          }
-          // Also check children
-          node.querySelectorAll && node.querySelectorAll(
-            'link[href*="Material+Icons"], link[href*="material+icons"]'
-          ).forEach(function(el) {
-            el.parentNode && el.parentNode.removeChild(el);
-          });
-        }
-      });
-    });
-  });
-  observer.observe(document.documentElement, { childList: true, subtree: true });
-})();
-</script>
 
 <style>
 /* Belt-and-suspenders: even if the font somehow loads, zero out all ligature text */
