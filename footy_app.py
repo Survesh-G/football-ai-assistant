@@ -21,15 +21,15 @@ st.markdown(
     """
     <style>
 
-    /* MAIN APP */
+    /* MAIN APP BACKGROUND */
 
     .stApp {
         background-image:
         linear-gradient(
-            rgba(0, 0, 0, 0.80),
+            rgba(0, 0, 0, 0.82),
             rgba(0, 0, 0, 0.90)
         ),
-        url("https://images.unsplash.com/photo-1517466787929-bc90951d0974?q=80&w=2070&auto=format&fit=crop");
+        url("https://images.unsplash.com/photo-1518091043644-c1d4457512c6?q=80&w=2070&auto=format&fit=crop");
 
         background-size: cover;
         background-position: center;
@@ -47,13 +47,10 @@ st.markdown(
     section[data-testid="stSidebar"] {
         background:
         linear-gradient(
-            rgba(5, 5, 5, 0.96),
+            rgba(8, 8, 8, 0.96),
             rgba(15, 15, 15, 0.96)
-        ),
-        url("https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=80&w=800&auto=format&fit=crop");
+        );
 
-        background-size: cover;
-        background-position: center;
         border-right: 1px solid rgba(255,255,255,0.08);
     }
 
@@ -91,7 +88,7 @@ st.markdown(
         background: rgba(35, 35, 35, 0.92);
     }
 
-    /* FLOATING BALL */
+    /* FLOATING FOOTBALL */
 
     @keyframes float {
 
@@ -158,7 +155,7 @@ with st.sidebar:
 
     st.markdown(
         """
-        <h1 style='text-align:center;'>
+        <h1 style='text-align:center; color:white;'>
             Football AI
         </h1>
         """,
@@ -233,11 +230,19 @@ with st.sidebar:
 
 st.markdown(
     """
-    <div style="padding-top:10px;">
+    <div style="
+        background: rgba(15,15,15,0.72);
+        padding: 35px;
+        border-radius: 22px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.05);
+        margin-bottom: 25px;
+    ">
 
         <h1 style="
             font-size:72px;
             font-weight:800;
+            color:white;
             margin-bottom:10px;
         ">
             ⚽ Football AI Assistant
@@ -246,12 +251,21 @@ st.markdown(
         <p style="
             font-size:24px;
             color:#d1d1d1;
-            margin-top:0px;
+            line-height:1.6;
+            margin-bottom:10px;
         ">
             Get live football stats,
             tactical analysis,
             player insights,
             and football intelligence.
+        </p>
+
+        <p style="
+            font-size:16px;
+            color:#a8a8a8;
+            letter-spacing:0.5px;
+        ">
+            📅 Live football data updated till: 2025 Season
         </p>
 
     </div>
@@ -310,10 +324,11 @@ user_input = st.chat_input(
 
 if user_input:
 
+    # Display user message
     st.chat_message("user").write(user_input)
 
     # ---------------------------------
-    # CURRENT SEASON
+    # CURRENT FOOTBALL SEASON
     # ---------------------------------
 
     today = datetime.now()
@@ -324,7 +339,7 @@ if user_input:
         current_season = today.year - 1
 
     # ---------------------------------
-    # FOOTBALL API
+    # FOOTBALL API REQUEST
     # ---------------------------------
 
     url = (
@@ -427,7 +442,7 @@ if user_input:
     )
 
     # ---------------------------------
-    # GENERATE RESPONSE
+    # GENERATE AI RESPONSE
     # ---------------------------------
 
     with st.spinner("⚽ Analyzing football knowledge..."):
