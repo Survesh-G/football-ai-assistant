@@ -66,6 +66,25 @@ HEADERS   = {
 # and removes it instantly, before the font file is ever requested.
 # ══════════════════════════════════════════════════════════════════════════════
 st.markdown("""
+<style>
+/* Keep your app fonts for normal text */
+html, body, [class*="css"], .stApp {
+    font-family: 'Inter', sans-serif;
+}
+
+/* But restore Streamlit material icons */
+[data-testid="stIconMaterial"],
+.material-symbols-rounded,
+.material-icons {
+    font-family: "Material Symbols Rounded", "Material Icons" !important;
+    font-weight: normal !important;
+    font-style: normal !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+}
+</style>
+""", unsafe_allow_html=True)
 <script>
 (function () {
 
