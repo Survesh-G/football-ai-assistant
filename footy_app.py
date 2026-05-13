@@ -113,12 +113,12 @@ st.markdown("""
 .material-symbols-rounded,
 [class*="material-icon"],
 [class*="material-symbol"] {
-    font-size:   0    !important;
-    line-height: 0    !important;
-    width:       0    !important;
-    overflow:    hidden !important;
-    visibility:  hidden !important;
-    color:       transparent !important;
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
 }
 
 /* ── Our fonts ── */
