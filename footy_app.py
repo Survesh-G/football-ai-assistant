@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 # ---------------------------------
-# CUSTOM BACKGROUND
+# CUSTOM UI STYLING
 # ---------------------------------
 
 st.markdown(
@@ -23,29 +23,29 @@ st.markdown(
 
     .stApp {
         background-image: linear-gradient(
-            rgba(0, 0, 0, 0.82),
+            rgba(0, 0, 0, 0.80),
             rgba(0, 0, 0, 0.88)
         ),
-        url("https://images.unsplash.com/photo-1546519638-68e109498ffc?q=80&w=2070&auto=format&fit=crop");
+        url("https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=2070&auto=format&fit=crop");
 
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
     }
 
-    h1, h2, h3, h4, h5, h6, p, div {
+    h1, h2, h3, h4, h5, h6, p, div, span {
         color: white;
     }
 
     section[data-testid="stSidebar"] {
-        background-color: rgba(15, 15, 15, 0.92);
+        background-color: rgba(10, 10, 10, 0.92);
     }
 
     .stChatMessage {
-        background-color: rgba(25, 25, 25, 0.75);
+        background-color: rgba(20, 20, 20, 0.78);
         border-radius: 15px;
-        padding: 12px;
-        margin-bottom: 10px;
+        padding: 14px;
+        margin-bottom: 12px;
     }
 
     </style>
@@ -69,7 +69,7 @@ headers = {
 }
 
 # ---------------------------------
-# INITIALIZE GROQ CLIENT
+# INITIALIZE GROQ
 # ---------------------------------
 
 client = Groq(api_key=groq_api_key)
@@ -85,6 +85,15 @@ st.write(
 )
 
 # ---------------------------------
+# HERO IMAGE
+# ---------------------------------
+
+st.image(
+    "https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=2070&auto=format&fit=crop",
+    use_container_width=True
+)
+
+# ---------------------------------
 # SIDEBAR
 # ---------------------------------
 
@@ -97,27 +106,19 @@ with st.sidebar:
     st.divider()
 
     # ---------------------------------
-    # DYNAMIC FOOTBALL SEASON
+    # EPL TABLE
     # ---------------------------------
 
-    today = datetime.now()
-
-    if today.month >= 7:
-        current_season = today.year
-    else:
-        current_season = today.year - 1
-
-    # ---------------------------------
-    # LIVE EPL TABLE
-    # ---------------------------------
-
-    st.subheader("📊 Live EPL Table")
+    st.subheader("📊 EPL Table")
 
     try:
 
+        # Free tier works more reliably with 2024
+        standings_season = 2024
+
         standings_url = (
             f"https://v3.football.api-sports.io/standings"
-            f"?league=39&season={current_season}"
+            f"?league=39&season={standings_season}"
         )
 
         standings_response = requests.get(
@@ -135,12 +136,12 @@ with st.sidebar:
 
         for team in table[:10]:
 
-            position = team["rank"]
+            rank = team["rank"]
             name = team["team"]["name"]
             points = team["points"]
 
             st.write(
-                f"{position}. {name} — {points} pts"
+                f"{rank}. {name} — {points} pts"
             )
 
     except Exception:
@@ -148,6 +149,10 @@ with st.sidebar:
         st.write("Unable to load EPL standings.")
 
     st.divider()
+
+    # ---------------------------------
+    # EXAMPLE QUESTIONS
+    # ---------------------------------
 
     st.subheader("🔥 Example Questions")
 
@@ -206,7 +211,7 @@ user_input = st.chat_input(
 )
 
 # ---------------------------------
-# PROCESS INPUT
+# PROCESS USER INPUT
 # ---------------------------------
 
 if user_input:
@@ -215,7 +220,7 @@ if user_input:
     st.chat_message("user").write(user_input)
 
     # ---------------------------------
-    # CURRENT FOOTBALL SEASON
+    # DYNAMIC FOOTBALL SEASON
     # ---------------------------------
 
     today = datetime.now()
@@ -226,7 +231,7 @@ if user_input:
         current_season = today.year - 1
 
     # ---------------------------------
-    # FETCH PLAYER DATA
+    # PLAYER API REQUEST
     # ---------------------------------
 
     url = (
@@ -253,7 +258,7 @@ if user_input:
         }
 
     # ---------------------------------
-    # VALIDATE API RESPONSE
+    # CHECK IF API HAS DATA
     # ---------------------------------
 
     api_has_data = False
@@ -272,7 +277,7 @@ if user_input:
             api_has_data = True
 
     # ---------------------------------
-    # CREATE PROMPT
+    # PROMPT ENGINEERING
     # ---------------------------------
 
     if api_has_data:
@@ -321,7 +326,7 @@ if user_input:
         """
 
     # ---------------------------------
-    # SAVE ENHANCED PROMPT TO MEMORY
+    # SAVE PROMPT TO MEMORY
     # ---------------------------------
 
     st.session_state.messages.append(
@@ -359,7 +364,7 @@ if user_input:
             )
 
     # ---------------------------------
-    # DISPLAY AI RESPONSE
+    # DISPLAY RESPONSE
     # ---------------------------------
 
     st.chat_message("assistant").write(
