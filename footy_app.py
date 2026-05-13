@@ -1,9 +1,15 @@
 import streamlit as st
 from groq import Groq
 
-# Load API key
-with open("/Users/survesh/Downloads/ey-ai-upskill-b4-11052026-main/key_vault/Groq/Key.txt", "r") as file:
-    api_key = file.read().strip()
+# Page configuration
+st.set_page_config(
+    page_title="Football AI Assistant",
+    page_icon="⚽",
+    layout="wide"
+)
+
+# Load API key from Streamlit secrets
+api_key = st.secrets["GROQ_API_KEY"]
 
 # Initialize Groq client
 client = Groq(api_key=api_key)
@@ -11,10 +17,30 @@ client = Groq(api_key=api_key)
 # App title
 st.title("⚽ Football AI Assistant")
 
-st.write("Ask anything about football players, clubs, stats, tactics, or history.")
+st.write(
+    "Ask anything about football players, clubs, tactics, stats, or football history."
+)
 
-# Initialize chat memory
+# Sidebar
+with st.sidebar:
+
+    st.header("⚽ Football AI")
+
+    st.write("Powered by Groq + Llama 3.1")
+
+    st.divider()
+
+    st.subheader("Example Questions")
+
+    st.write("- Compare Messi vs Ronaldo")
+    st.write("- Best Premier League midfielders")
+    st.write("- Guardiola tactics")
+    st.write("- Cristiano Ronaldo stats")
+    st.write("- Explain tiki-taka")
+
+# Initialize conversation memory
 if "messages" not in st.session_state:
+
     st.session_state.messages = [
         {
             "role": "system",
@@ -23,21 +49,33 @@ if "messages" not in st.session_state:
 
             Provide:
             - player stats
-            - club history
             - tactical analysis
+            - football history
+            - club information
             - trophies
             - comparisons
             - football trivia
 
-            Keep answers clear and engaging.
+            Keep answers engaging and informative.
             """
         }
     ]
 
-# User input
-user_input = st.chat_input("Ask a football question...")
+# Display previous chat messages
+for message in st.session_state.messages:
 
-# If user enters message
+    if message["role"] != "system":
+
+        st.chat_message(message["role"]).write(
+            message["content"]
+        )
+
+# Chat input
+user_input = st.chat_input(
+    "Ask a football question..."
+)
+
+# Process user message
 if user_input:
 
     # Display user message
@@ -51,19 +89,27 @@ if user_input:
         }
     )
 
-    # Send to Groq
-    response = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
-        messages=st.session_state.messages,
-        temperature=0.3
+    # AI response
+    with st.spinner("Analyzing football data..."):
+
+        response = client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=st.session_state.messages,
+            temperature=0.3
+        )
+
+        assistant_reply = (
+            response.choices[0]
+            .message
+            .content
+        )
+
+    # Display assistant response
+    st.chat_message("assistant").write(
+        assistant_reply
     )
 
-    assistant_reply = response.choices[0].message.content
-
-    # Display AI response
-    st.chat_message("assistant").write(assistant_reply)
-
-    # Store assistant reply
+    # Save assistant response
     st.session_state.messages.append(
         {
             "role": "assistant",
