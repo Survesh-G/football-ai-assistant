@@ -23,25 +23,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
-components.html(
-    """
-    <script>
-    const nukeGhostText = () => {
-        const links = window.parent.document.getElementsByTagName('link');
-        for (let i = 0; i < links.length; i++) {
-            if (links[i].href.includes('fonts.googleapis.com/icon') || 
-                links[i].href.includes('Material+Icons')) {
-                links[i].remove();
-            }
-        }
-    };
-    nukeGhostText();
-    const observer = new MutationObserver(nukeGhostText);
-    observer.observe(window.parent.document.head, { childList: true, subtree: true });
-    </script>
-    """,
-    height=0,
-)
+
 # ══════════════════════════════════════════════════════════════════════════════
 # SEASON
 # ══════════════════════════════════════════════════════════════════════════════
@@ -118,25 +100,8 @@ st.markdown("""
 
 <style>
 /* Belt-and-suspenders: even if the font somehow loads, zero out all ligature text */
-@font-face { font-family: 'Material Icons';            src: local('_none_'); }
-@font-face { font-family: 'Material Icons Outlined';   src: local('_none_'); }
-@font-face { font-family: 'Material Icons Round';      src: local('_none_'); }
-@font-face { font-family: 'Material Symbols Outlined'; src: local('_none_'); }
-@font-face { font-family: 'Material Symbols Rounded';  src: local('_none_'); }
-
-.material-icons,
-.material-icons-outlined,
-.material-icons-round,
-.material-symbols-outlined,
-.material-symbols-rounded,
-[class*="material-icon"],
-[class*="material-symbol"] {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-    width: 0 !important;
-    height: 0 !important;
-    overflow: hidden !important;
+button[kind="header"] {
+    font-family: inherit !important;
 }
 
 /* ── Our fonts ── */
