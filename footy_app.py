@@ -67,7 +67,71 @@ HEADERS   = {
 # ══════════════════════════════════════════════════════════════════════════════
 st.markdown("""
 <script>
+(function () {
 
+  function removeMaterialIcons() {
+    document.querySelectorAll('link').forEach(function (el) {
+      const href = (el.href || "").toLowerCase();
+
+      if (
+        href.includes("materialicons") ||
+        href.includes("material-icons") ||
+        href.includes("material+icons") ||
+        href.includes("fonts.googleapis.com/icon") ||
+        href.includes("fonts.gstatic.com")
+      ) {
+        el.remove();
+      }
+    });
+  }
+
+  // Initial cleanup
+  removeMaterialIcons();
+
+  // Watch for new injected links
+  const observer = new MutationObserver(function (mutations) {
+    mutations.forEach(function (mutation) {
+      mutation.addedNodes.forEach(function (node) {
+
+        if (node.nodeType !== 1) return;
+
+        // Direct LINK node
+        if (node.tagName === "LINK") {
+          const href = (node.href || "").toLowerCase();
+
+          if (
+            href.includes("material") ||
+            href.includes("fonts.googleapis.com/icon") ||
+            href.includes("fonts.gstatic.com")
+          ) {
+            node.remove();
+          }
+        }
+
+        // Nested LINK nodes
+        node.querySelectorAll?.("link").forEach(function (el) {
+          const href = (el.href || "").toLowerCase();
+
+          if (
+            href.includes("material") ||
+            href.includes("fonts.googleapis.com/icon") ||
+            href.includes("fonts.gstatic.com")
+          ) {
+            el.remove();
+          }
+        });
+
+      });
+    });
+  });
+
+  observer.observe(document.documentElement, {
+    childList: true,
+    subtree: true
+  });
+
+})();
+</script>
 <style>
 /* Belt-and-suspenders: even if the font somehow loads, zero out all ligature text */
 button[kind="header"] {
