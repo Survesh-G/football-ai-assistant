@@ -23,7 +23,25 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
-
+components.html(
+    """
+    <script>
+    const nukeGhostText = () => {
+        const links = window.parent.document.getElementsByTagName('link');
+        for (let i = 0; i < links.length; i++) {
+            if (links[i].href.includes('fonts.googleapis.com/icon') || 
+                links[i].href.includes('Material+Icons')) {
+                links[i].remove();
+            }
+        }
+    };
+    nukeGhostText();
+    const observer = new MutationObserver(nukeGhostText);
+    observer.observe(window.parent.document.head, { childList: true, subtree: true });
+    </script>
+    """,
+    height=0,
+)
 # ══════════════════════════════════════════════════════════════════════════════
 # SEASON
 # ══════════════════════════════════════════════════════════════════════════════
