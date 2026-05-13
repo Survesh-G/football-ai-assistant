@@ -1,16 +1,10 @@
-"""
-PITCH IQ — Football Intelligence System
-Fixes: Material Icons ghost | chat avatar text | legend colours | removed scorers/fixtures
-Colours: Cyan / Red / White | Font: Inter + JetBrains Mono
-"""
-
 import streamlit as st
 import requests
 from datetime import datetime
 import streamlit.components.v1 as components
 
 # ══════════════════════════════════════════════════════════════════════════════
-# PAGE CONFIG  —  emoji favicon, no text that could trigger icon fonts
+# PAGE CONFIG
 # ══════════════════════════════════════════════════════════════════════════════
 st.set_page_config(
     page_title="PITCH IQ · Football Intelligence",
@@ -49,31 +43,9 @@ HEADERS   = {
 
 # ══════════════════════════════════════════════════════════════════════════════
 # GLOBAL CSS
-# KEY FIX: override Material Icons @font-face with empty src so the font never
-# loads. This stops icon ligature names like "keyboard_double_arrow_right",
-# "face", "smart_toy" from rendering as visible text strings.
 # ══════════════════════════════════════════════════════════════════════════════
 st.markdown("""
 <style>
-/* ── Nuke Material Icons so ligature names never render as text ── */
-@font-face { font-family: 'Material Icons';          src: local(''); }
-@font-face { font-family: 'Material Icons Outlined'; src: local(''); }
-@font-face { font-family: 'Material Icons Round';    src: local(''); }
-@font-face { font-family: 'Material Symbols Outlined'; src: local(''); }
-@font-face { font-family: 'Material Symbols Rounded';  src: local(''); }
-.material-icons,
-.material-icons-outlined,
-.material-icons-round,
-.material-symbols-outlined,
-.material-symbols-rounded,
-[class*="material-icon"],
-[class*="material-symbol"] {
-    font-size: 0 !important;
-    width: 0 !important;
-    overflow: hidden !important;
-    visibility: hidden !important;
-}
-
 /* ── Our fonts ── */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap');
 
@@ -120,7 +92,7 @@ section[data-testid="stSidebar"] {
     min-width: 300px !important;
 }
 
-/* ── Chat: hide avatar images/icons entirely — they cause the face/smart_toy bug ── */
+/* ── Chat: hide avatar images/icons entirely so no raw text ghosting occurs ── */
 [data-testid="stChatMessage"] > div:first-child {
     display: none !important;
 }
@@ -337,7 +309,6 @@ def standings_html(rows, rel_start: int, show_all: bool = False) -> str:
 
     ts = now.strftime("%H:%M")
 
-    # Use HTML entities for the square — avoids any icon font ligature risk
     legend = (
         '<p class="meta" style="margin-top:6px">'
         '<span style="color:#00d4ff">&#9632;</span>'
@@ -364,21 +335,26 @@ def standings_html(rows, rel_start: int, show_all: bool = False) -> str:
     )
 
 # ══════════════════════════════════════════════════════════════════════════════
-# SESSION STATE
+# SESSION STATE & SYSTEM PROMPT
 # ══════════════════════════════════════════════════════════════════════════════
 if "selected_league" not in st.session_state:
     st.session_state.selected_league = "EPL"
 if "table_expanded" not in st.session_state:
     st.session_state.table_expanded = False
 
+# Hardcode key player locations to prevent hallucination in future/alternate seasons
 SYSTEM_PROMPT = (
     "You are PITCH IQ — an elite football AI analyst with encyclopedic knowledge. "
+    "CRITICAL MODERN FOOTBALL FACTS: Cristiano Ronaldo plays for Al Nassr (Saudi Pro League). "
+    "Lionel Messi plays for Inter Miami (MLS). Kylian Mbappé plays for Real Madrid. "
+    "Harry Kane plays for Bayern Munich. Neymar plays for Al Hilal. "
     "Provide sharp tactical analysis, player breakdowns, club history, head-to-heads, "
     "transfer insights, and formation deep-dives. Be confident and opinionated — like a "
     "top pundit fused with a data scientist. Reference live data naturally when provided. "
     "Format responses with **bold headers** and concise bullet points. "
     f"Current season: {SEASON_LABEL}. Today: {now.strftime('%d %B %Y')}."
 )
+
 if "messages" not in st.session_state:
     st.session_state.messages = [{"role": "system", "content": SYSTEM_PROMPT}]
 
@@ -394,8 +370,6 @@ except Exception:
 # SIDEBAR
 # ══════════════════════════════════════════════════════════════════════════════
 with st.sidebar:
-
-    # SVG logo — uses only system fonts inside SVG to avoid any icon font clash
     LOGO_SVG = """
     <div style="padding:20px 16px 4px">
       <svg width="200" height="60" viewBox="0 0 200 60" fill="none"
@@ -480,15 +454,13 @@ with st.sidebar:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# HERO — isolated iframe via components.html
-# Fully self-contained: no Streamlit CSS injection, no Material Icon fonts
+# HERO
 # ══════════════════════════════════════════════════════════════════════════════
 hero_html = f"""<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
 <style>
-/* NO external font imports here — keeps this iframe clean */
 *{{margin:0;padding:0;box-sizing:border-box}}
 html,body{{background:transparent;overflow:hidden;height:164px}}
 .hero{{
@@ -568,10 +540,6 @@ components.html(hero_html, height=172, scrolling=False)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # CHAT HISTORY
-# DO NOT pass avatar= to st.chat_message.
-# Passing any string (emoji, symbol, letter) triggers Streamlit's avatar loader
-# which maps it through the Material Icons font — causing "face"/"smart_toy"
-# to appear as raw text. Omitting avatar= uses safe built-in silhouette icons.
 # ══════════════════════════════════════════════════════════════════════════════
 for msg in st.session_state.messages:
     if msg["role"] == "system":
@@ -585,9 +553,16 @@ for msg in st.session_state.messages:
 user_input = st.chat_input("Ask anything — tactics, transfers, history, players...")
 
 if user_input:
+    # 1. Render user message instantly in the UI cleanly (no prompt instructions visible)
     with st.chat_message("user"):
         st.markdown(user_input)
+    
+    # 2. Save only the clean message to UI history
+    st.session_state.messages.append({"role": "user", "content": user_input})
 
+    # 3. Create a temporary clone of the chat to inject secret instructions to the AI
+    api_messages = [{"role": m["role"], "content": m["content"]} for m in st.session_state.messages]
+    
     live_ctx = ""
     if sdata:
         lines = [
@@ -596,17 +571,14 @@ if user_input:
             for t in sdata[:5]
         ]
         live_ctx = (
-            f"\n\nLive {sel['name']} Top 5 ({SEASON_LABEL}):\n"
-            + "\n".join(lines)
+            f"\n\n[HIDDEN CONTEXT: The user is currently viewing the {sel['name']} standings. "
+            f"Current Top 5: {', '.join(lines)}]"
         )
 
-    prompt = (
-        f"User Question: {user_input}{live_ctx}\n\n"
-        "Answer as PITCH IQ. Reference live data naturally if relevant. "
-        "Bold headers + bullet points. Be sharp, insightful, opinionated."
-    )
-    st.session_state.messages.append({"role": "user", "content": prompt})
+    # Attach the hidden context only to the final message sent to the API
+    api_messages[-1]["content"] = user_input + live_ctx
 
+    # 4. Call API
     with st.chat_message("assistant"):
         with st.spinner("Analysing..."):
             try:
@@ -614,7 +586,7 @@ if user_input:
                 client = Groq(api_key=groq_api_key)
                 resp   = client.chat.completions.create(
                     model="llama-3.1-8b-instant",
-                    messages=st.session_state.messages,
+                    messages=api_messages,
                     temperature=0.38,
                     max_tokens=1024,
                 )
