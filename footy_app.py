@@ -169,18 +169,54 @@ if user_input:
     # CREATE AI PROMPT
     # ---------------------------------
 
+    p# Detect whether API returned useful data
+
+api_has_data = (
+    "response" in football_data
+    and len(football_data["response"]) > 0
+)
+
+if api_has_data:
+
     prompt = f"""
     User Question:
     {user_input}
 
-    Live Football Data:
+    Live Football API Data:
     {football_data}
 
-    Analyze this football information clearly.
+    Use this live football data to answer.
 
     Include:
     - overview
     - important stats
+    - tactical analysis
+    - interesting insights
+
+    Keep the response natural and engaging.
+    """
+
+else:
+
+    prompt = f"""
+    User Question:
+    {user_input}
+
+    No live football API data was found.
+
+    Use your football knowledge to answer naturally.
+
+    Do NOT mention:
+    - API limitations
+    - missing API data
+    - subscription restrictions
+    - outdated information
+
+    Simply answer like an expert football analyst.
+
+    Include:
+    - overview
+    - career highlights
     - tactical analysis
     - interesting insights
     """
