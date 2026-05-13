@@ -14,11 +14,10 @@ st.set_page_config(
 )
 
 # ---------------------------------
-# LOAD API KEYS FROM STREAMLIT SECRETS
+# LOAD API KEYS
 # ---------------------------------
 
 groq_api_key = st.secrets["GROQ_API_KEY"]
-
 football_api_key = st.secrets["FOOTBALL_API_KEY"]
 
 # ---------------------------------
@@ -53,9 +52,9 @@ with st.sidebar:
 
     st.write("- Cristiano Ronaldo stats")
     st.write("- Messi vs Ronaldo")
-    st.write("- Arsenal current form")
+    st.write("- Wayne Rooney career")
     st.write("- Guardiola tactics")
-    st.write("- Mbappe current club")
+    st.write("- Last El Clasico")
 
 # ---------------------------------
 # CHAT MEMORY
@@ -75,11 +74,11 @@ if "messages" not in st.session_state:
             - player stats
             - tactical analysis
             - club information
-            - comparisons
             - football history
+            - comparisons
             - football insights
 
-            Keep responses engaging and informative.
+            Keep responses engaging and natural.
             """
         }
     ]
@@ -101,7 +100,7 @@ for message in st.session_state.messages:
 # ---------------------------------
 
 user_input = st.chat_input(
-    "Ask about football players, clubs, or tactics..."
+    "Ask about football players, clubs, matches, or tactics..."
 )
 
 # ---------------------------------
@@ -129,32 +128,28 @@ if user_input:
         "x-apisports-key": football_api_key
     }
 
-    # ---------------------------------
-    # DYNAMIC FOOTBALL SEASON
-    # ---------------------------------
-
+    # Dynamic football season logic
     today = datetime.now()
 
-    # Football seasons usually start around July/August
     if today.month >= 7:
         current_season = today.year
     else:
         current_season = today.year - 1
 
-    # ---------------------------------
     # API URL
-    # ---------------------------------
-
     url = (
         f"https://v3.football.api-sports.io/players"
         f"?search={user_input}&season={current_season}"
     )
 
+    football_data = {}
+
     try:
 
         football_response = requests.get(
             url,
-            headers=headers
+            headers=headers,
+            timeout=10
         )
 
         football_data = football_response.json()
@@ -166,60 +161,70 @@ if user_input:
         }
 
     # ---------------------------------
-    # CREATE AI PROMPT
+    # SAFELY CHECK API DATA
     # ---------------------------------
 
-    p# Detect whether API returned useful data
+    api_has_data = False
 
-api_has_data = (
-    "response" in football_data
-    and len(football_data["response"]) > 0
-)
+    if isinstance(football_data, dict):
 
-if api_has_data:
+        if (
+            "response" in football_data
+            and isinstance(
+                football_data["response"],
+                list
+            )
+            and len(football_data["response"]) > 0
+        ):
 
-    prompt = f"""
-    User Question:
-    {user_input}
+            api_has_data = True
 
-    Live Football API Data:
-    {football_data}
+    # ---------------------------------
+    # CREATE PROMPT
+    # ---------------------------------
 
-    Use this live football data to answer.
+    if api_has_data:
 
-    Include:
-    - overview
-    - important stats
-    - tactical analysis
-    - interesting insights
+        prompt = f"""
+        User Question:
+        {user_input}
 
-    Keep the response natural and engaging.
-    """
+        Live Football API Data:
+        {football_data}
 
-else:
+        Use this live football data to answer naturally.
 
-    prompt = f"""
-    User Question:
-    {user_input}
+        Include:
+        - overview
+        - important stats
+        - tactical analysis
+        - interesting insights
+        """
 
-    No live football API data was found.
+    else:
 
-    Use your football knowledge to answer naturally.
+        prompt = f"""
+        User Question:
+        {user_input}
 
-    Do NOT mention:
-    - API limitations
-    - missing API data
-    - subscription restrictions
-    - outdated information
+        No useful live football API data was found.
 
-    Simply answer like an expert football analyst.
+        Use your football knowledge to answer naturally.
 
-    Include:
-    - overview
-    - career highlights
-    - tactical analysis
-    - interesting insights
-    """
+        Do NOT mention:
+        - API limitations
+        - subscription restrictions
+        - missing API data
+        - outdated information
+
+        Simply answer like a football expert.
+
+        Include:
+        - overview
+        - career highlights
+        - tactical analysis
+        - interesting insights
+        """
 
     # ---------------------------------
     # GENERATE AI RESPONSE
@@ -249,7 +254,9 @@ else:
 
         except Exception as e:
 
-            assistant_reply = f"Error: {str(e)}"
+            assistant_reply = (
+                f"Error generating response: {str(e)}"
+            )
 
     # ---------------------------------
     # DISPLAY RESPONSE
@@ -259,7 +266,7 @@ else:
         assistant_reply
     )
 
-    # Save response
+    # Save assistant response
     st.session_state.messages.append(
         {
             "role": "assistant",
