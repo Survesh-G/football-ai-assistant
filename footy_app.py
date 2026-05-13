@@ -14,38 +14,96 @@ st.set_page_config(
 )
 
 # ---------------------------------
-# CUSTOM UI STYLING
+# CUSTOM UI / UX STYLING
 # ---------------------------------
 
 st.markdown(
     """
     <style>
 
+    /* Main background */
+
     .stApp {
-        background-image: linear-gradient(
-            rgba(0, 0, 0, 0.80),
+        background-image:
+        linear-gradient(
+            rgba(0, 0, 0, 0.78),
             rgba(0, 0, 0, 0.88)
         ),
-        url("https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=2070&auto=format&fit=crop");
+        url("https://images.unsplash.com/photo-1518604666860-9ed391f76460?q=80&w=2070&auto=format&fit=crop");
 
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
     }
 
+    /* Remove white header */
+
+    header {
+        background: transparent !important;
+    }
+
+    /* Sidebar */
+
+    section[data-testid="stSidebar"] {
+        background: rgba(8, 8, 8, 0.92);
+        border-right: 1px solid rgba(255,255,255,0.08);
+    }
+
+    /* Text */
+
     h1, h2, h3, h4, h5, h6, p, div, span {
         color: white;
     }
 
-    section[data-testid="stSidebar"] {
-        background-color: rgba(10, 10, 10, 0.92);
-    }
+    /* Chat cards */
 
     .stChatMessage {
-        background-color: rgba(20, 20, 20, 0.78);
-        border-radius: 15px;
+        background-color: rgba(20, 20, 20, 0.72);
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 18px;
         padding: 14px;
-        margin-bottom: 12px;
+        margin-bottom: 14px;
+        backdrop-filter: blur(8px);
+    }
+
+    /* Feature cards */
+
+    .feature-card {
+        background: rgba(25, 25, 25, 0.75);
+        padding: 18px;
+        border-radius: 18px;
+        text-align: center;
+        border: 1px solid rgba(255,255,255,0.05);
+        margin-bottom: 15px;
+        transition: 0.3s ease;
+    }
+
+    .feature-card:hover {
+        transform: scale(1.03);
+        background: rgba(40, 40, 40, 0.9);
+    }
+
+    /* Floating animation */
+
+    @keyframes float {
+        0% {
+            transform: translateY(0px);
+        }
+
+        50% {
+            transform: translateY(-6px);
+        }
+
+        100% {
+            transform: translateY(0px);
+        }
+    }
+
+    .floating-ball {
+        animation: float 3s ease-in-out infinite;
+        text-align: center;
+        font-size: 70px;
+        margin-top: 10px;
     }
 
     </style>
@@ -69,29 +127,10 @@ headers = {
 }
 
 # ---------------------------------
-# INITIALIZE GROQ
+# INITIALIZE GROQ CLIENT
 # ---------------------------------
 
 client = Groq(api_key=groq_api_key)
-
-# ---------------------------------
-# APP TITLE
-# ---------------------------------
-
-st.title("⚽ Football AI Assistant")
-
-st.write(
-    "Get live football stats, tactical analysis, player insights, and football knowledge."
-)
-
-# ---------------------------------
-# HERO IMAGE
-# ---------------------------------
-
-st.image(
-    "https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=2070&auto=format&fit=crop",
-    use_container_width=True
-)
 
 # ---------------------------------
 # SIDEBAR
@@ -99,69 +138,95 @@ st.image(
 
 with st.sidebar:
 
-    st.header("⚽ Football AI")
+    st.markdown(
+        """
+        <div class="floating-ball">
+            ⚽
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
-    st.write("Powered by Groq + API-Football")
+    st.markdown(
+        """
+        <h1 style='text-align:center;'>
+            Football AI
+        </h1>
+        """,
+        unsafe_allow_html=True
+    )
+
+    st.write("")
+
+    st.markdown(
+        """
+        <div class="feature-card">
+            <h3>⚡ Live AI Analysis</h3>
+            <p>
+            Tactical breakdowns, player analysis,
+            and football intelligence powered by AI.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    st.markdown(
+        """
+        <div class="feature-card">
+            <h3>📊 Football Knowledge</h3>
+            <p>
+            Ask about players, clubs,
+            football history, and tactics.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    st.markdown(
+        """
+        <div class="feature-card">
+            <h3>🧠 Conversational Memory</h3>
+            <p>
+            Ask follow-up questions naturally
+            like a real football discussion.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
     st.divider()
-
-    # ---------------------------------
-    # EPL TABLE
-    # ---------------------------------
-
-    st.subheader("📊 EPL Table")
-
-    try:
-
-        # Free tier works more reliably with 2024
-        standings_season = 2024
-
-        standings_url = (
-            f"https://v3.football.api-sports.io/standings"
-            f"?league=39&season={standings_season}"
-        )
-
-        standings_response = requests.get(
-            standings_url,
-            headers=headers,
-            timeout=10
-        )
-
-        standings_data = standings_response.json()
-
-        table = (
-            standings_data["response"][0]
-            ["league"]["standings"][0]
-        )
-
-        for team in table[:10]:
-
-            rank = team["rank"]
-            name = team["team"]["name"]
-            points = team["points"]
-
-            st.write(
-                f"{rank}. {name} — {points} pts"
-            )
-
-    except Exception:
-
-        st.write("Unable to load EPL standings.")
-
-    st.divider()
-
-    # ---------------------------------
-    # EXAMPLE QUESTIONS
-    # ---------------------------------
 
     st.subheader("🔥 Example Questions")
 
-    st.write("- Cristiano Ronaldo stats")
-    st.write("- Messi vs Ronaldo")
-    st.write("- Wayne Rooney career")
-    st.write("- Guardiola tactics")
-    st.write("- Last El Clasico")
-    st.write("- Arsenal current squad")
+    st.write("• Compare Messi vs Ronaldo")
+    st.write("• Wayne Rooney career")
+    st.write("• Guardiola tactics")
+    st.write("• Last El Clasico")
+    st.write("• Arsenal current squad")
+    st.write("• Best Premier League midfielders")
+
+# ---------------------------------
+# TITLE SECTION
+# ---------------------------------
+
+st.markdown(
+    """
+    <div style="padding-top:20px;">
+        <h1 style="font-size:72px;">
+            ⚽ Football AI Assistant
+        </h1>
+
+        <p style="font-size:24px; color:#d1d1d1;">
+            Get live football stats, tactical analysis,
+            player insights, and football intelligence.
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 # ---------------------------------
 # CHAT MEMORY
@@ -173,19 +238,17 @@ if "messages" not in st.session_state:
         {
             "role": "system",
             "content": """
-            You are an expert football AI assistant.
+            You are an elite football AI analyst.
 
-            Use live football data whenever available.
-
-            Provide:
-            - player stats
+            You provide:
             - tactical analysis
-            - club information
-            - football history
-            - comparisons
+            - player analysis
             - football insights
+            - club analysis
+            - comparisons
+            - football history
 
-            Keep responses engaging, concise, and natural.
+            Speak naturally and confidently.
             """
         }
     ]
@@ -207,11 +270,11 @@ for message in st.session_state.messages:
 # ---------------------------------
 
 user_input = st.chat_input(
-    "Ask about football players, clubs, tactics, or matches..."
+    "Ask anything about football..."
 )
 
 # ---------------------------------
-# PROCESS USER INPUT
+# PROCESS INPUT
 # ---------------------------------
 
 if user_input:
@@ -220,7 +283,7 @@ if user_input:
     st.chat_message("user").write(user_input)
 
     # ---------------------------------
-    # DYNAMIC FOOTBALL SEASON
+    # CURRENT FOOTBALL SEASON
     # ---------------------------------
 
     today = datetime.now()
@@ -231,7 +294,7 @@ if user_input:
         current_season = today.year - 1
 
     # ---------------------------------
-    # PLAYER API REQUEST
+    # FOOTBALL API REQUEST
     # ---------------------------------
 
     url = (
@@ -258,7 +321,7 @@ if user_input:
         }
 
     # ---------------------------------
-    # CHECK IF API HAS DATA
+    # CHECK IF API RETURNED DATA
     # ---------------------------------
 
     api_has_data = False
@@ -326,7 +389,7 @@ if user_input:
         """
 
     # ---------------------------------
-    # SAVE PROMPT TO MEMORY
+    # SAVE TO MEMORY
     # ---------------------------------
 
     st.session_state.messages.append(
@@ -340,7 +403,7 @@ if user_input:
     # GENERATE AI RESPONSE
     # ---------------------------------
 
-    with st.spinner("⚽ Analyzing football data..."):
+    with st.spinner("⚽ Analyzing football knowledge..."):
 
         try:
 
@@ -372,7 +435,7 @@ if user_input:
     )
 
     # ---------------------------------
-    # SAVE RESPONSE TO MEMORY
+    # SAVE RESPONSE
     # ---------------------------------
 
     st.session_state.messages.append(
