@@ -132,7 +132,7 @@ st.markdown("""
 
 })();
 </script>
-            <style>
+<style>
 span.material-symbols-rounded {
     display: none !important;
 }
